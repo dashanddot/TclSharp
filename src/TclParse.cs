@@ -22,6 +22,8 @@ namespace TCLSHARP
 
 	public class TCLObject
 	{
+		public static TCLObject nil = new TCLObject(null);
+
 		public object oo;
 		public TCLKind kind;
 
@@ -45,6 +47,26 @@ namespace TCLSHARP
 
 				return false;
 			}
+		}
+
+		internal TCLObject[] Slice( int v, int nn = int.MaxValue)
+		{
+			var cmd = this;
+
+			if (oo is TCLObject[] && v == 0)
+				return oo as TCLObject[];
+
+			if (v < 0)
+				return null;
+
+			int ann = Math.Min(nn, cmd.Count) - v;
+
+			var arr = new TCLObject[ann];
+
+			for (int i = 0; i < ann; i++)
+				arr[i] = cmd[v + i];
+
+			return arr;
 		}
 
 		public int Count 
@@ -98,20 +120,7 @@ namespace TCLSHARP
 			return value.oo as TCLObject[];
 		}
 
-		internal TCLObject[] Slice(TCLObject cmd, int v, int nn = int.MaxValue )
-		{
-			if (v < 0)
-				return null;
 
-			int ann = Math.Min( nn, cmd.Count )-v;
-
-			var arr = new TCLObject[ann];
-
-			for (int i = 0; i < ann; i++)
-				arr[i] = cmd[v + i];
-
-			return arr;
-		}
 
 		public TCLObject this[int index]
 		{
@@ -205,7 +214,7 @@ namespace TCLSHARP
 				{
 					deep--;
 
-					if( deep > 0 )
+					if( deep >= 0 )
 						continue;
 
 					keyb = i;

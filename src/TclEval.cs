@@ -4,6 +4,41 @@ using System.Text;
 
 namespace TCLSHARP
 {
+	class TCLProc
+	{
+		public TCLObject[] args;
+		public TCLObject[] defs;
+
+		public List<TCLObject> code;
+
+		public TCLObject DoCall(TCLObject[] argv)
+		{
+			var interp = TCLInterp.runningNow;
+
+			var prew = interp.ns;
+
+			interp.ns = new Dictionary<string, TCLObject>(prew);
+
+			for (int i = 0; i < this.args.Length; i++)
+			{
+				interp.ns[this.args[i]] = argv[i];
+			}
+
+			foreach (var a in code)
+			{
+				if (interp.returnValue != null)
+					break;
+
+				interp.evalTclLine(a);
+			}
+
+			var res = interp.returnValue;
+			interp.returnValue = null;
+
+			return res;
+		}
+	}
+
 	public class TCLInterp
 	{
 		public delegate int PerformCalculation(TCLObject[] argv);
@@ -19,7 +54,12 @@ namespace TCLSHARP
 		}
 		public TCLObject proc_define(TCLObject[] argv)
 		{
-			ns[argv[0]] = TCLObject.func((argv) => TCLObject.auto(""));
+			var proc = new TCLProc();
+
+			proc.args = TCL.parseTCL(argv[1])[0].Slice(0);
+			proc.code = TCL.parseTCL(argv[2]);
+
+			ns[argv[0]] = TCLObject.func(proc.DoCall);
 
 			return ns[argv[0]];
 		}
@@ -51,7 +91,7 @@ namespace TCLSHARP
 
 		public TCLObject clock_get(TCLObject[] argv)
 		{
-			return TCLObject.auto(System.Environment.TickCount);
+			return TCLObject.auto(System.Environment.TickCount/1000);
 		}
 
 		public TCLObject math_rand(TCLObject[] argv)
@@ -62,6 +102,12 @@ namespace TCLSHARP
 		public TCLObject math_round(TCLObject[] argv)
 		{
 			return TCLObject.auto( 0 );
+		}
+		public TCLObject break_return(TCLObject[] argv)
+		{
+			TCLInterp.runningNow.returnValue = argv[0];
+
+			return TCLInterp.runningNow.returnValue;
 		}
 
 		public Dictionary<string, TCLObject> ns = new Dictionary<string, TCLObject>();
@@ -82,6 +128,8 @@ namespace TCLSHARP
 
 			ns.Add("rand", TCLObject.func(math_rand));
 			ns.Add("round", TCLObject.func(math_round));
+
+			ns.Add("return", TCLObject.func(break_return));
 		}
 
 		string stringTcl(TCLObject cmd)
@@ -185,8 +233,13 @@ namespace TCLSHARP
 			return TCLObject.auto( _list );
 		}
 
+		public static TCLInterp runningNow = null;
+		public TCLObject returnValue;
+
 		public TCLObject evalTclLine(TCLObject cmd)
 		{
+			runningNow = this;
+
 			if ((cmd).is_array)
 			{
 				var cmdname = cmd[0].ToString();

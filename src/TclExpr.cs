@@ -120,7 +120,7 @@ namespace TCLSHARP
 			}
 
 			if (keyb == -1)
-				keyb = ssl - 1;
+				keyb = ssl;
 
 			_token = _str.Substring( keya, Math.Max( 0 , keyb-keya ) );
 
@@ -196,19 +196,45 @@ namespace TCLSHARP
 					continue;
 				}
 
+				double a = 0;
+				double b = 0;
+
 				switch (sms)
 				{
 					case "*":
 						{
-							opstack.Pop();
-							opstack.Pop();
-							opstack.Push(0);
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b*a);
+							break;
+						}
+					case "-":
+						{
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b-a);
 							break;
 						}
 				}
 			}
 
 			return opstack.Pop();
+		}
+
+		private double operand_d(object v)
+		{
+			if (v is TCLObject)
+				return 0;
+
+			if (v is int)
+				return (int)v;
+
+			if (v is double)
+				return (double)v;
+
+			return 0;
 		}
 
 		public TCLObject parseTCLexpr(string exprs, TCLInterp tCLInterp )
