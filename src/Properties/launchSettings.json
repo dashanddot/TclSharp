@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TCLSHARP": {
+      "commandName": "Project",
+      "commandLineArgs": "test1.tcl"
+    }
+  }
+}

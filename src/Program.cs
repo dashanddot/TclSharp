@@ -7,9 +7,13 @@ namespace TCLSHARP
     {
         static void Main(string[] args)
         {
+            string file = "game.tcl";
 
-            
-            var text = File.ReadAllText("game.tcl");
+            if (args.Length > 0)
+                file = args[0];
+
+
+            var text = File.ReadAllText(file);
 
             var app = TCL.parseTCL(text);
 

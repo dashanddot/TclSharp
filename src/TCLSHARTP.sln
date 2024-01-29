@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C2002F51-0747-425C-B0B6-A79AF0D1CB00}"
 	ProjectSection(SolutionItems) = preProject
 		bin\Debug\netcoreapp3.1\game.tcl = bin\Debug\netcoreapp3.1\game.tcl
+		bin\Debug\netcoreapp3.1\test1.tcl = bin\Debug\netcoreapp3.1\test1.tcl
 	EndProjectSection
 EndProject
 Global

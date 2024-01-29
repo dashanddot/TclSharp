@@ -41,6 +41,8 @@ namespace TCLSHARP
 
 	public class TCLInterp : ITCLInterp
 	{
+		public string[] searchPathes;
+
 		public delegate int PerformCalculation(TCLObject[] argv);
 
 		public TCLObject conio_gets(TCLObject[] argv)
@@ -56,6 +58,22 @@ namespace TCLSHARP
 
 		public TCLObject conio_flush(TCLObject[] argv)
 		{
+
+			return null;
+		}
+
+		public TCLObject source_tcl(TCLObject[] argv)
+		{
+			var text = System.IO.File.ReadAllText(argv[0]);
+
+			var app = TCL.parseTCL(text);
+
+			var interp = TCLInterp.runningNow;
+
+			foreach (var a in app)
+			{
+				interp.evalTclLine(a);
+			}
 
 			return null;
 		}
@@ -198,6 +216,8 @@ namespace TCLSHARP
 
 		public TCLInterp()
 		{
+			ns.Add("source", TCLObject.func(source_tcl));
+
 			ns.Add("puts", TCLObject.func(debug_print));
 
 			//todo: move to implementation?
@@ -336,6 +356,9 @@ namespace TCLSHARP
 			if ((cmd).is_array)
 			{
 				var cmdname = cmd[0].ToString();
+
+				if (cmdname[0] == '#')
+					return null;
 
 				if (ns.ContainsKey(cmdname))
 				{
