@@ -39,15 +39,47 @@ namespace TCLSHARP
 		}
 	}
 
-	public class TCLInterp
+	public class TCLInterp : ITCLInterp
 	{
 		public delegate int PerformCalculation(TCLObject[] argv);
 
+		public TCLObject conio_gets(TCLObject[] argv)
+		{
+			var interp = TCLInterp.runningNow;
+
+			
+
+			interp.ns[ argv[1] ] = Console.ReadLine();
+
+			return null;
+		}
+
+		public TCLObject conio_flush(TCLObject[] argv)
+		{
+
+			return null;
+		}
+
 		public TCLObject debug_print(TCLObject[] argv)
 		{
-			foreach (var s in argv)
-				Console.Write(s.ToString());
+			bool newline = true;
 
+			foreach (var s in argv)
+			{
+				var ss = s.ToString();
+
+				if (ss[0] == '-')
+				{
+					if (ss == "-nonewline")
+						newline = false;
+
+					continue;
+				}
+
+				Console.Write(s.ToString());
+			}
+
+			if(newline)
 			Console.WriteLine();
 
 			return null;
@@ -64,8 +96,60 @@ namespace TCLSHARP
 			return ns[argv[0]];
 		}
 
+		public TCLObject if_define(TCLObject[] argv)
+		{
+			var interp = TCLInterp.runningNow;
+
+			var expr = new TclExpr();
+
+			expr.evalTCLexpr(argv[0], interp);
+
+			var code = TCL.parseTCL(argv[1]);
+
+
+
+			if (true)
+			{
+				foreach (var a in code)
+				{
+					if (interp.returnValue != null)
+						break;
+
+					interp.evalTclLine(a);
+				}
+
+
+				
+			}
+
+			return null;
+		}
+
 		public TCLObject while_define(TCLObject[] argv)
 		{
+			var interp = TCLInterp.runningNow; 
+			
+			var expr = new TclExpr();
+
+			expr.evalTCLexpr(argv[0], interp);
+
+			var code = TCL.parseTCL(argv[1]);
+
+			
+
+			while (true)
+			{
+				foreach (var a in code)
+				{
+					if (interp.returnValue != null)
+						break;
+
+					interp.evalTclLine(a);
+				}
+
+
+				break;
+			}
 
 			return null;
 		}
@@ -86,7 +170,7 @@ namespace TCLSHARP
 				exprs += a.ToString();
 			}
 
-			return (new TclExpr()).parseTCLexpr(exprs, this);
+			return (new TclExpr()).evalTCLexpr(exprs, this);
 		}
 
 		public TCLObject clock_get(TCLObject[] argv)
@@ -115,10 +199,17 @@ namespace TCLSHARP
 		public TCLInterp()
 		{
 			ns.Add("puts", TCLObject.func(debug_print));
+
+			//todo: move to implementation?
+			ns.Add("gets", TCLObject.func( conio_gets ));
+			ns.Add("flush", TCLObject.func(conio_flush));
+
+
 			ns.Add("proc", TCLObject.func(proc_define));
 			ns.Add("set", TCLObject.func(set_var));
 
 			ns.Add("while", TCLObject.func(while_define));
+			ns.Add("if", TCLObject.func(if_define));
 
 			ns.Add("expr", TCLObject.func(expr_do));
 
@@ -130,6 +221,8 @@ namespace TCLSHARP
 			ns.Add("round", TCLObject.func(math_round));
 
 			ns.Add("return", TCLObject.func(break_return));
+
+			ns.Add("incr", TCLObject.func( (TCLObject[] argv) => { return argv[0]+1; }  ));
 		}
 
 		string stringTcl(TCLObject cmd)
@@ -249,13 +342,13 @@ namespace TCLSHARP
 					//echo "call (func) ";
 					var func = ns[cmdname];
 
-					var argv = cmd_argv(cmd, 1);
+					
 
 					//echo "args:  ".print_r( argv, true );
 
 					//argv = array_map('TCL::stringTcl', argv);
 
-					return func.Call((argv) as TCLObject[]);
+					return func.Command( this, cmd );
 				}
 				else
 				{
@@ -273,7 +366,7 @@ namespace TCLSHARP
 			return func.Call((argv) as TCLObject[]);
 		}
 
-		private TCLObject[] cmd_argv(TCLObject cmd, int v)
+		public TCLObject[] cmd_argv(TCLObject cmd, int v)
 		{
 			int nn = cmd.Count - v;
 			var _out = new TCLObject[nn];
@@ -319,5 +412,7 @@ namespace TCLSHARP
 
 			return null;
 		}
+
+
 	}
 }

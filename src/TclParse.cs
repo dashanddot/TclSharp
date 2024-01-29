@@ -171,13 +171,23 @@ namespace TCLSHARP
 			return null;
 		}
 
+		public TCLObject Command(ITCLInterp i,TCLObject tCLObject)
+		{
+			var argv = i.cmd_argv(tCLObject, 1);
+
+			return Call(argv);
+		}
+
 		internal static TCLObject func(Func<TCLObject[], TCLObject> pfunc)
 		{
 			return new TCLObject(pfunc, TCLKind.func);
 		}
 	}
 
-
+	public interface ITCLInterp
+	{
+		TCLObject[] cmd_argv(TCLObject argv, int v);
+	}
 
 	class TCL
 	{

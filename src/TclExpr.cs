@@ -37,7 +37,7 @@ namespace TCLSHARP
 			_readyToken = _token;
 		}
 
-		static string pairable = "+-<>*";
+		static string pairable = "+-<>*!";
 
 		public bool getExpectedToken( string tok )
 		{
@@ -74,10 +74,14 @@ namespace TCLSHARP
 				if (skip)
 				{
 					if (_str[_i] == ' ')
+					{
+						keya = _i+1;//in case of end
 						continue;
+					}
 
-					skip = false;
 					keya = _i;
+					skip = false;
+					
 				}
 
 				if (_str[_i] == '$')
@@ -190,7 +194,7 @@ namespace TCLSHARP
 
 				var sms = sm as string;
 
-				if (sms == null)
+				if (sms == null || sms[0] == '$' )
 				{
 					opstack.Push(sm);
 					continue;
@@ -217,6 +221,14 @@ namespace TCLSHARP
 							opstack.Push(b-a);
 							break;
 						}
+					case "!=":
+						{
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b != a);
+							break;
+						}
 				}
 			}
 
@@ -234,10 +246,18 @@ namespace TCLSHARP
 			if (v is double)
 				return (double)v;
 
+			if (v is string)
+			{
+				var vs = (string)v;
+
+				if( vs[0] == '$' )
+					return operand_d(this.tCLInterp.ns[vs.Substring(1)] );
+			}
+
 			return 0;
 		}
 
-		public TCLObject parseTCLexpr(string exprs, TCLInterp tCLInterp )
+		public TCLObject evalTCLexpr(string exprs, TCLInterp tCLInterp )
 		{
 			this.tCLInterp = tCLInterp;
 
@@ -267,6 +287,11 @@ namespace TCLSHARP
 
 				var tr = lexer.getToken();
 
+				if (tr.Length == 0)
+				{
+					break;
+				}
+
 				if (tr == ",")
 				{
 					lexer.returnToken();
@@ -279,7 +304,7 @@ namespace TCLSHARP
 					break;
 				}
 
-				if (tr[0] > 47)
+				if (tr[0] > 47 || tr[0] == '$' )
 				{
 					lexer.returnToken();
 
