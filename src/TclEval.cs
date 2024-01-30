@@ -114,33 +114,60 @@ namespace TCLSHARP
 			return ns[argv[0]];
 		}
 
-		public TCLObject if_define(TCLObject[] argv)
+		public TCLObject cmd_if_define(TCLObject[] argv)
 		{
 			var interp = TCLInterp.runningNow;
 
-			var expr = new TclExpr();
+			
 
-			expr.evalTCLexpr(argv[0], interp);
+			
 
-			var code = TCL.parseTCL(argv[1]);
+			
 
-
-
-			if (true)
+			for (int i = 0; i < argv.Length; i++)
 			{
-				foreach (var a in code)
-				{
-					if (interp.returnValue != null)
-						break;
+				var expr = new TclExpr();
 
-					interp.evalTclLine(a);
+				var flag = TCLObject.nil;
+
+				if (argv[i] != "else")
+				{
+					i++;
+
+					flag = expr.evalTCLexpr(argv[i], interp);
 				}
 
+				i++;
 
 				
+
+				if ( flag != TCLObject.nil )
+				{
+					var code = TCL.parseTCL(argv[i]);
+
+					foreach (var a in code)
+					{
+						if (interp.returnValue != null)
+							break;
+
+						interp.evalTclLine(a);
+					}
+
+					break;
+
+				}
 			}
 
 			return null;
+		}
+
+		private TCLObject cmd_incr(TCLObject[] argv)
+		{
+			var interp = TCLInterp.runningNow;
+
+			interp.ns[argv[1]]  = TCLObject.auto( (int)interp.ns[argv[1]] + 1);
+
+			return interp.ns[argv[1]];
 		}
 
 		public TCLObject while_define(TCLObject[] argv)
@@ -153,7 +180,7 @@ namespace TCLSHARP
 
 			var code = TCL.parseTCL(argv[1]);
 
-			
+			int loop = 0;
 
 			while (true)
 			{
@@ -165,8 +192,8 @@ namespace TCLSHARP
 					interp.evalTclLine(a);
 				}
 
-
-				break;
+				if(++loop>3)
+					break;
 			}
 
 			return null;
@@ -229,7 +256,7 @@ namespace TCLSHARP
 			ns.Add("set", TCLObject.func(set_var));
 
 			ns.Add("while", TCLObject.func(while_define));
-			ns.Add("if", TCLObject.func(if_define));
+			ns.Add("if", TCLObject.def_cmd(cmd_if_define));
 
 			ns.Add("expr", TCLObject.func(expr_do));
 
@@ -242,8 +269,10 @@ namespace TCLSHARP
 
 			ns.Add("return", TCLObject.func(break_return));
 
-			ns.Add("incr", TCLObject.func( (TCLObject[] argv) => { return argv[0]+1; }  ));
+			ns.Add("incr", TCLObject.def_cmd(  cmd_incr ));
 		}
+
+
 
 		string stringTcl(TCLObject cmd)
 		{

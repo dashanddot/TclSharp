@@ -87,11 +87,11 @@ namespace TCLSHARP
 				if (_str[_i] == '$')
 					continue;
 
-				if (_i == keya && _str[_i] < 47)
+				if (_i == keya && IsSymbol(_str[_i] ) )
 				{
 					var sym = _str[_i];
 
-					if (_i + 1 < ssl && !char.IsLetterOrDigit(_str[_i+1])  && pairable.Contains(sym) )
+					if (_i + 1 < ssl && IsSymbol(_str[_i+1])  && pairable.Contains(sym) )
 					{
 						_i++;
 					}
@@ -131,6 +131,16 @@ namespace TCLSHARP
 			return _token;
 		}
 
+		public static bool IsSymbol(char v)
+		{
+			if ( v > 32 && v <= 47 )
+				return true;
+
+			if (v >= 58 && v <= 64)
+				return true;
+
+			return false;
+		}
 	}
 
     public class TclExpr
@@ -229,6 +239,14 @@ namespace TCLSHARP
 							opstack.Push(b != a);
 							break;
 						}
+					case "<":
+						{
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b < a);
+							break;
+						}
 				}
 			}
 
@@ -238,7 +256,7 @@ namespace TCLSHARP
 		private double operand_d(object v)
 		{
 			if (v is TCLObject)
-				return 0;
+				return operand_d(((TCLObject)v).oo);
 
 			if (v is int)
 				return (int)v;
@@ -252,6 +270,8 @@ namespace TCLSHARP
 
 				if( vs[0] == '$' )
 					return operand_d(this.tCLInterp.ns[vs.Substring(1)] );
+
+				return double.Parse(vs);
 			}
 
 			return 0;
@@ -304,7 +324,7 @@ namespace TCLSHARP
 					break;
 				}
 
-				if (tr[0] > 47 || tr[0] == '$' )
+				if ( !TCLLexer.IsSymbol(tr[0]) || tr[0] == '$' )
 				{
 					lexer.returnToken();
 

@@ -15,9 +15,12 @@ namespace TCLSHARP
 	public enum TCLKind : int
 	{
 		Any = 0,
-		//squreBrakets = 1,
-		func = 3,
+		cmd = 1,//command line like cmd
+
+		//squreBrakets = 2,
+		func = 3,//proc
 		evstring = 4,
+		
 	}
 
 	public class TCLObject
@@ -101,6 +104,14 @@ namespace TCLSHARP
 			return value.ToString();
 		}
 
+		public static implicit operator int(TCLObject value)
+		{
+			if (value.oo is int)
+				return (int)value.oo;
+
+			return int.Parse(value.ToString());
+		}
+
 		public static implicit operator TCLObject(TCLObject[] value)
 		{
 
@@ -173,14 +184,26 @@ namespace TCLSHARP
 
 		public TCLObject Command(ITCLInterp i,TCLObject tCLObject)
 		{
+			if (kind == TCLKind.cmd)
+			{
+				Func<TCLObject[], TCLObject> pfunc = oo as Func<TCLObject[], TCLObject>;
+
+				if (pfunc != null)
+					return pfunc( i.cmd_argv(tCLObject, 0) );
+			}
+
 			var argv = i.cmd_argv(tCLObject, 1);
 
 			return Call(argv);
 		}
 
-		internal static TCLObject func(Func<TCLObject[], TCLObject> pfunc)
+		public static TCLObject func(Func<TCLObject[], TCLObject> pfunc)
 		{
 			return new TCLObject(pfunc, TCLKind.func);
+		}
+		public static TCLObject def_cmd(Func<TCLObject[], TCLObject> pfunc)
+		{
+			return new TCLObject(pfunc, TCLKind.cmd);
 		}
 	}
 
