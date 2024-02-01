@@ -197,7 +197,7 @@ namespace TCLSHARP
 					interp.evalTclLine(a);
 				}
 
-				if(++loop>3)
+				if(++loop>300)
 					break;
 			}
 
@@ -235,7 +235,7 @@ namespace TCLSHARP
 
 		public TCLObject math_round(TCLObject[] argv)
 		{
-			return TCLObject.auto( 0 );
+			return TCLObject.auto( (int)Math.Round((double)argv[0])  );
 		}
 		public TCLObject break_return(TCLObject[] argv)
 		{
@@ -416,11 +416,11 @@ namespace TCLSHARP
 			return cmd;
 		}
 
-		public TCLObject commandCall( string cmdname, object[] argv )
+		public TCLObject commandCall( string cmdname, TCLObject[] argv )
 		{
 			var func = ns[cmdname];
 
-			return func.Call((argv) as TCLObject[]);
+			return func.Call(argv);
 		}
 
 		public TCLObject[] cmd_argv(TCLObject cmd, int v)

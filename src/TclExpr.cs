@@ -143,7 +143,33 @@ namespace TCLSHARP
 		}
 	}
 
-    public class TclExpr
+	public class TclOperator
+	{
+		public virtual object Do(TclExpr exp)
+		{
+			return null;
+		}
+	}
+
+	public class TclCall : TclOperator
+	{
+		private string tok;
+		private List<object> v;
+
+		public TclCall(string tok, List<object> v)
+		{
+			this.tok = tok;
+			this.v = v;
+		}
+
+		public override object Do(TclExpr exp)
+		{
+			
+			return TCLInterp.runningNow.commandCall(tok, new TCLObject[] { TCLObject.auto( exp.doStack(v)) } );
+		}
+	}
+
+	public class TclExpr
     {
 		TCLLexer lexer;
 		TCLInterp tCLInterp;
@@ -164,21 +190,25 @@ namespace TCLSHARP
 				if( !lexer.getExpectedToken("(") )
 					throw new Exception();
 
+				List<object> subFlow = null;
+
 				if (!lexer.getExpectedToken(")"))
 				{
-					subExpr();
+					subFlow = subExpr();
 
 					if (!lexer.getExpectedToken(")"))
 						throw new Exception();
+
+					
 				}
 
-				return this.tCLInterp.commandCall( tok, null ).oo;
+				return new TclCall(tok, subFlow);
 			}
 
 			return tok;
 		}
 
-		private object subExpr()
+		private List<object> subExpr()
 		{
 			var prew = _flow;
 			
@@ -186,29 +216,45 @@ namespace TCLSHARP
 
 			_parseTCLexpr();
 
-			var res = _doStack(_flow);
 
+			var res = _flow;
 
 			_flow = prew;
 
 			return res;
 		}
 
+		public object doStack(List<object> stack)
+		{
+			if (stack == null)
+				return null;
+
+			return _doStack(stack);
+		}
+
 		private object _doStack(List<object> stack)
 		{
 			var opstack = new Stack<object>();
 
-			for(int i=0; i<_flow.Count; i++)
+			for(int i=0; i< stack.Count; i++)
 			{
-				var sm = _flow[i];
+				var sm = stack[i];
 
 				var sms = sm as string;
+				
+				if (sm is TclOperator)
+				{
+					opstack.Push(((TclOperator)sm).Do(this));
+					continue;
+				}
 
 				if (sms == null || sms[0] == '$' )
 				{
 					opstack.Push(sm);
 					continue;
 				}
+
+				
 
 				double a = 0;
 				double b = 0;

@@ -109,7 +109,10 @@ namespace TCLSHARP
 		public static implicit operator int(TCLObject value)
 		{
 			if (value.oo is int)
-				return (int)value.oo;
+				return (int)value.oo; 
+			
+			if (value.oo is double)
+				return (int)((double)value.oo);
 
 			return int.Parse(value.ToString());
 		}
