@@ -26,9 +26,11 @@ namespace TCLSHARP
 	public class TCLObject
 	{
 		public static TCLObject nil = new TCLObject(null);
+		public static TCLObject bool_true = new TCLObject(true);
 
 		public object oo;
 		public TCLKind kind;
+
 
 		public bool is_string 
 		{
@@ -110,6 +112,17 @@ namespace TCLSHARP
 				return (int)value.oo;
 
 			return int.Parse(value.ToString());
+		}
+
+		public static implicit operator bool(TCLObject value)
+		{
+			if (value.oo is bool)
+				return ((bool)value.oo);
+
+			if (value.oo is int)
+				return ((int)value.oo)!=0;
+
+			return bool.Parse(value.ToString());
 		}
 
 		public static implicit operator TCLObject(TCLObject[] value)

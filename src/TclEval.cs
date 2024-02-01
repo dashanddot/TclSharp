@@ -128,7 +128,7 @@ namespace TCLSHARP
 			{
 				var expr = new TclExpr();
 
-				var flag = TCLObject.nil;
+				var flag = TCLObject.bool_true;
 
 				if (argv[i] != "else")
 				{
@@ -141,7 +141,7 @@ namespace TCLSHARP
 
 				
 
-				if ( flag != TCLObject.nil )
+				if ( (bool)flag )
 				{
 					var code = TCL.parseTCL(argv[i]);
 
@@ -176,7 +176,7 @@ namespace TCLSHARP
 			
 			var expr = new TclExpr();
 
-			expr.evalTCLexpr(argv[0], interp);
+			
 
 			var code = TCL.parseTCL(argv[1]);
 
@@ -184,6 +184,11 @@ namespace TCLSHARP
 
 			while (true)
 			{
+				var flag = expr.evalTCLexpr(argv[0], interp);
+
+				if (!(bool)flag)
+					break;
+
 				foreach (var a in code)
 				{
 					if (interp.returnValue != null)
