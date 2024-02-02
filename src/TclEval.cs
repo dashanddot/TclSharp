@@ -358,8 +358,11 @@ namespace TCLSHARP
 
 			ns.Add("incr", TCLObject.def_cmd(  cmd_incr ));
 
+
+			var path = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+
 			if (loadRuntime)
-				_execSource(this,"tclr.tcl");
+				_execSource(this, path + Path.DirectorySeparatorChar + "tclr.tcl");
 		}
 
 
