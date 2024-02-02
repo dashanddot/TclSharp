@@ -13,16 +13,13 @@ namespace TCLSHARP
                 file = args[0];
 
 
-            var text = File.ReadAllText(file);
+        
 
-            var app = TCL.parseTCL(text);
+            var interp = new TCLInterp(true);
 
-            var interp = new TCLInterp();
+            interp.Exec(file);
 
-            foreach (var a in app)
-            {
-                interp.evalTclLine(a);
-            }
+          
 
 
         }

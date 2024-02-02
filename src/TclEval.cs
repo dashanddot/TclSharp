@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+using System.Reflection;
 
 namespace TCLSHARP
 {
@@ -64,18 +66,26 @@ namespace TCLSHARP
 
 		public TCLObject source_tcl(TCLObject[] argv)
 		{
-			var text = System.IO.File.ReadAllText(argv[0]);
+			return _execSource(TCLInterp.runningNow,argv[0]);
+		}
+
+		TCLObject _execSource(TCLInterp interp, string file)
+		{
+			var text = System.IO.File.ReadAllText(file);
 
 			var app = TCL.parseTCL(text);
 
-			var interp = TCLInterp.runningNow;
+			
 
 			foreach (var a in app)
 			{
+				if (interp.returnValue != null)
+					break;
+
 				interp.evalTclLine(a);
 			}
 
-			return null;
+			return interp.returnValue;
 		}
 
 		public TCLObject debug_print(TCLObject[] argv)
@@ -106,12 +116,81 @@ namespace TCLSHARP
 		{
 			var proc = new TCLProc();
 
-			proc.args = TCL.parseTCL(argv[1])[0].Slice(0);
+			var args = TCL.parseTCL(argv[1]);
+
+			if (args.Count > 0)
+				proc.args = args[0].Slice(0);
+			else
+				proc.args = new TCLObject[0];
+
 			proc.code = TCL.parseTCL(argv[2]);
 
 			ns[argv[0]] = TCLObject.func(proc.DoCall);
 
 			return ns[argv[0]];
+		}
+
+		TCLObject _nproc(TCLObject[] argv)
+		{
+			return TCLObject.auto(System.Environment.TickCount);
+		}
+
+		static public Type lockupCLRType(string typeName)
+		{
+			var type = Type.GetType(typeName);
+			if (type != null) return type;
+			foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				type = a.GetType(typeName);
+				if (type != null)
+					return type;
+			}
+			return null;
+		}
+
+		public TCLObject clr_extern(TCLObject[] argv)
+		{
+			var app = TCL.parseTCL(argv[1]);
+			var interp = TCLInterp.runningNow;
+
+			foreach (var line in app)
+			{
+				if (!line.is_array)
+					break;
+
+				if (line[0] == "proc")
+				{
+					var fullname = line[1].ToString();
+
+					var qname = fullname.Split( "::" );
+
+					var typename = (string[])qname.Clone();
+					var methodName = qname[qname.Length - 1];
+
+					Array.Resize( ref typename, qname.Length - 1);
+
+
+					var tt = lockupCLRType( String.Join(".", typename ) );
+
+					var mm = tt.GetMember(methodName)[0];
+
+					if (mm is System.Reflection.MethodInfo)
+					{
+						interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto( (mm as MethodInfo).Invoke(null, null)); });
+					}
+					else
+					{
+						interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
+					}
+				}
+			}
+
+			return null;
+		}
+
+		public TCLObject namespace_define(TCLObject[] argv)
+		{
+			return null;
 		}
 
 		public TCLObject cmd_if_define(TCLObject[] argv)
@@ -246,9 +325,12 @@ namespace TCLSHARP
 
 		public Dictionary<string, TCLObject> ns = new Dictionary<string, TCLObject>();
 
-		public TCLInterp()
+		public TCLInterp( bool loadRuntime = false)
 		{
-			ns.Add("source", TCLObject.func(source_tcl));
+			ns.Add("::tclr::extern", TCLObject.def_cmd(clr_extern));
+
+			ns.Add("source", TCLObject.func(source_tcl)); 
+			ns.Add("namespace", TCLObject.def_cmd(namespace_define));
 
 			ns.Add("puts", TCLObject.func(debug_print));
 
@@ -275,6 +357,9 @@ namespace TCLSHARP
 			ns.Add("return", TCLObject.func(break_return));
 
 			ns.Add("incr", TCLObject.def_cmd(  cmd_incr ));
+
+			if (loadRuntime)
+				_execSource(this,"tclr.tcl");
 		}
 
 
@@ -437,6 +522,12 @@ namespace TCLSHARP
 				{
 					var arg = cmd[from].oo as string;
 
+					if (string.IsNullOrEmpty(arg))
+					{
+						_out[i] = "";
+						continue;
+					}
+
 					if (arg[0] == '$')
 						_out[i] = ns[arg.Substring(1)];
 					else if (arg[0] == '[')
@@ -470,6 +561,21 @@ namespace TCLSHARP
 			return null;
 		}
 
+		public object Exec(string file)
+		{
+			var text = File.ReadAllText(file);
 
+			var app = TCL.parseTCL(text);
+
+			foreach (var a in app)
+			{
+				if (returnValue != null)
+					break;
+
+				evalTclLine(a);
+			}
+
+			return returnValue;
+		}
 	}
 }

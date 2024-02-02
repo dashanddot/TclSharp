@@ -487,8 +487,11 @@ namespace TCLSHARP
 					if (ssi == 59 || ssi == 91 || ssi == 93 || ssi == 123 || ssi == 125)
 				{
 					break;
+					}
+					
+					
+					
 				}
-			}
 
 				if (i > ss.Length)
 					i = ss.Length;
@@ -504,13 +507,19 @@ namespace TCLSHARP
 				}
 				else
 				{
-					tok = floatval(toks);
+						
+					float tokf = floatval(toks);
 
-						int toki = int.Parse(toks);
+						int toki = (int)tokf;
+						
+						
 
 					if (toks == toki.ToString() )
 						tok = toki;
-				}
+					else if (tokf != 0 || toks == "0" )
+							tok = toki;
+
+					}
 			}
 
 		//echo "token? 'tok' \n";
@@ -534,7 +543,11 @@ namespace TCLSHARP
 
 		private static float floatval(string tok)
 		{
-			return float.Parse(tok);
+			float tokf = 0;
+
+			float.TryParse(tok,out tokf);
+
+			return tokf;
 		}
 
 

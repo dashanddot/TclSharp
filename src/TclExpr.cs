@@ -269,6 +269,14 @@ namespace TCLSHARP
 							opstack.Push(b*a);
 							break;
 						}
+					case "/":
+						{
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b / a);
+							break;
+						}
 					case "-":
 						{
 							a = operand_d(opstack.Pop());
