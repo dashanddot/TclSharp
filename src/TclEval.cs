@@ -6,20 +6,21 @@ using System.Reflection;
 
 namespace TCLSHARP
 {
+
 	class TCLProc
 	{
-		public TCLObject[] args;
-		public TCLObject[] defs;
+		public TCLAtom[] args;
+		public TCLAtom[] defs;
 
-		public List<TCLObject> code;
+		public List<TCLAtom> code;
 
-		public TCLObject DoCall(TCLObject[] argv)
+		public TCLAtom DoCall(TCLAtom[] argv)
 		{
 			var interp = TCLInterp.runningNow;
 
 			var prew = interp.ns;
 
-			interp.ns = new Dictionary<string, TCLObject>(prew);
+			interp.ns = new Dictionary<string, TCLAtom>(prew);
 
 			for (int i = 0; i < this.args.Length; i++)
 			{
@@ -45,9 +46,9 @@ namespace TCLSHARP
 	{
 		public string[] searchPathes;
 
-		public delegate int PerformCalculation(TCLObject[] argv);
+		public delegate int PerformCalculation(TCLAtom[] argv);
 
-		public TCLObject conio_gets(TCLObject[] argv)
+		public TCLAtom conio_gets(TCLAtom[] argv)
 		{
 			var interp = TCLInterp.runningNow;
 
@@ -58,18 +59,18 @@ namespace TCLSHARP
 			return null;
 		}
 
-		public TCLObject conio_flush(TCLObject[] argv)
+		public TCLAtom conio_flush(TCLAtom[] argv)
 		{
 
 			return null;
 		}
 
-		public TCLObject source_tcl(TCLObject[] argv)
+		public TCLAtom source_tcl(TCLAtom[] argv)
 		{
 			return _execSource(TCLInterp.runningNow,argv[0]);
 		}
 
-		TCLObject _execSource(TCLInterp interp, string file)
+		TCLAtom _execSource(TCLInterp interp, string file)
 		{
 			var text = System.IO.File.ReadAllText(file);
 
@@ -88,7 +89,7 @@ namespace TCLSHARP
 			return interp.returnValue;
 		}
 
-		public TCLObject debug_print(TCLObject[] argv)
+		public TCLAtom debug_print(TCLAtom[] argv)
 		{
 			bool newline = true;
 
@@ -112,7 +113,7 @@ namespace TCLSHARP
 
 			return null;
 		}
-		public TCLObject proc_define(TCLObject[] argv)
+		public TCLAtom proc_define(TCLAtom[] argv)
 		{
 			var proc = new TCLProc();
 
@@ -121,26 +122,26 @@ namespace TCLSHARP
 			if (args.Count > 0)
 				proc.args = args[0].Slice(0);
 			else
-				proc.args = new TCLObject[0];
+				proc.args = new TCLAtom[0];
 
 			proc.code = TCL.parseTCL(argv[2]);
 
-			ns[argv[0]] = TCLObject.func(proc.DoCall);
+			ns[argv[0]] = TCLAtom.func(proc.DoCall);
 
 			return ns[argv[0]];
 		}
 
-		TCLObject _nproc(TCLObject[] argv)
+		TCLAtom _nproc(TCLAtom[] argv)
 		{
 			return TCLObject.auto(System.Environment.TickCount);
 		}
 
-		public TCLObject namespace_define(TCLObject[] argv)
+		public TCLAtom namespace_define(TCLAtom[] argv)
 		{
 			return null;
 		}
 
-		public TCLObject cmd_if_define(TCLObject[] argv)
+		public TCLAtom cmd_if_define(TCLAtom[] argv)
 		{
 			var interp = TCLInterp.runningNow;
 
@@ -154,7 +155,7 @@ namespace TCLSHARP
 			{
 				var expr = new TclExpr();
 
-				var flag = TCLObject.bool_true;
+				var flag = TCLAtom.bool_true;
 
 				if (argv[i] != "else")
 				{
@@ -187,7 +188,7 @@ namespace TCLSHARP
 			return null;
 		}
 
-		private TCLObject cmd_incr(TCLObject[] argv)
+		private TCLAtom cmd_incr(TCLAtom[] argv)
 		{
 			var interp = TCLInterp.runningNow;
 
@@ -196,7 +197,7 @@ namespace TCLSHARP
 			return interp.ns[argv[1]];
 		}
 
-		public TCLObject while_define(TCLObject[] argv)
+		public TCLAtom while_define(TCLAtom[] argv)
 		{
 			var interp = TCLInterp.runningNow; 
 			
@@ -230,14 +231,14 @@ namespace TCLSHARP
 			return null;
 		}
 
-		public TCLObject set_var(TCLObject[] argv)
+		public TCLAtom set_var(TCLAtom[] argv)
 		{
 			ns[argv[0]] = argv[1];
 
 			return argv[1];
 		}
 
-		public TCLObject expr_do(TCLObject[] argv)
+		public TCLAtom expr_do(TCLAtom[] argv)
 		{
 			string exprs = "";
 
@@ -249,28 +250,28 @@ namespace TCLSHARP
 			return (new TclExpr()).evalTCLexpr(exprs, this);
 		}
 
-		public TCLObject clock_get(TCLObject[] argv)
+		public TCLAtom clock_get(TCLAtom[] argv)
 		{
 			return TCLObject.auto(System.Environment.TickCount/1000);
 		}
 
-		public TCLObject math_rand(TCLObject[] argv)
+		public TCLAtom math_rand(TCLAtom[] argv)
 		{
 			return TCLObject.auto( (new Random()).NextDouble() );
 		}
 
-		public TCLObject math_round(TCLObject[] argv)
+		public TCLAtom math_round(TCLAtom[] argv)
 		{
 			return TCLObject.auto( (int)Math.Round((double)argv[0])  );
 		}
-		public TCLObject break_return(TCLObject[] argv)
+		public TCLAtom break_return(TCLAtom[] argv)
 		{
 			TCLInterp.runningNow.returnValue = argv[0];
 
 			return TCLInterp.runningNow.returnValue;
 		}
 
-		public Dictionary<string, TCLObject> ns = new Dictionary<string, TCLObject>();
+		public Dictionary<string, TCLAtom> ns = new Dictionary<string, TCLAtom>();
 
 		public TCLInterp( bool loadRuntime = false)
 		{
@@ -278,34 +279,34 @@ namespace TCLSHARP
 
 			//ns.Add("::tclr::extern", TCLObject.def_cmd(clr_extern));
 
-			ns.Add("source", TCLObject.func(source_tcl)); 
-			ns.Add("namespace", TCLObject.def_cmd(namespace_define));
+			ns.Add("source", TCLAtom.func(source_tcl)); 
+			ns.Add("namespace", TCLAtom.def_cmd(namespace_define));
 
-			ns.Add("puts", TCLObject.func(debug_print));
+			ns.Add("puts", TCLAtom.func(debug_print));
 
 			//todo: move to implementation?
-			ns.Add("gets", TCLObject.func( conio_gets ));
-			ns.Add("flush", TCLObject.func(conio_flush));
+			ns.Add("gets", TCLAtom.func( conio_gets ));
+			ns.Add("flush", TCLAtom.func(conio_flush));
 
 
-			ns.Add("proc", TCLObject.func(proc_define));
-			ns.Add("set", TCLObject.func(set_var));
+			ns.Add("proc", TCLAtom.func(proc_define));
+			ns.Add("set", TCLAtom.func(set_var));
 
-			ns.Add("while", TCLObject.func(while_define));
-			ns.Add("if", TCLObject.def_cmd(cmd_if_define));
+			ns.Add("while", TCLAtom.func(while_define));
+			ns.Add("if", TCLAtom.def_cmd(cmd_if_define));
 
-			ns.Add("expr", TCLObject.func(expr_do));
+			ns.Add("expr", TCLAtom.func(expr_do));
 
 			//TODO: to stdlib
-			ns.Add("clock", TCLObject.func(clock_get));
+			ns.Add("clock", TCLAtom.func(clock_get));
 
 
-			ns.Add("rand", TCLObject.func(math_rand));
-			ns.Add("round", TCLObject.func(math_round));
+			ns.Add("rand", TCLAtom.func(math_rand));
+			ns.Add("round", TCLAtom.func(math_round));
 
-			ns.Add("return", TCLObject.func(break_return));
+			ns.Add("return", TCLAtom.func(break_return));
 
-			ns.Add("incr", TCLObject.def_cmd(  cmd_incr ));
+			ns.Add("incr", TCLAtom.def_cmd(  cmd_incr ));
 
 
 			var path = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
@@ -316,7 +317,7 @@ namespace TCLSHARP
 
 
 
-		string stringTcl(TCLObject cmd)
+		string stringTcl(TCLAtom cmd)
 		{
 			var list = evalTclOrString(cmd);
 
@@ -325,14 +326,14 @@ namespace TCLSHARP
 			if (list.oo is string)
 				return list.oo as string;
 
-			foreach (var s in list.oo as List<TCLObject>)
+			foreach (var s in list.oo as List<TCLAtom>)
 				sout += s;
 
 			return sout;
 		}
 
 
-		TCLObject evalTclOrString(TCLObject cmd)
+		TCLAtom evalTclOrString(TCLAtom cmd)
 		{
 
 
@@ -352,7 +353,7 @@ namespace TCLSHARP
 			int sua = 0;
 			int sul = 0;
 
-			List<TCLObject> _list = new List<TCLObject>();
+			List<TCLAtom> _list = new List<TCLAtom>();
 
 			for (int i = 0; i < ssl; i++)
 			{
@@ -373,7 +374,7 @@ namespace TCLSHARP
 
 					if (arr.val != null)
 					{
-						TCLObject kvar = null;// GLOBALS[arr['key']];
+						TCLAtom kvar = null;// GLOBALS[arr['key']];
 						var key = stringTcl(arr.val);
 
 						//echo "kv 'var' 'key' ";
@@ -418,9 +419,9 @@ namespace TCLSHARP
 		}
 
 		public static TCLInterp runningNow = null;
-		public TCLObject returnValue;
+		public TCLAtom returnValue;
 
-		public TCLObject evalTclLine(TCLObject cmd)
+		public TCLAtom evalTclLine(TCLAtom cmd)
 		{
 			runningNow = this;
 
@@ -461,14 +462,14 @@ namespace TCLSHARP
 			return cmd;
 		}
 
-		private TCLObject resolveQName(string cmdname)
+		private TCLAtom resolveQName(string cmdname)
 		{
 			if (ns.ContainsKey(cmdname))
 				return ns[cmdname];
 
 			var qname = cmdname.Split("::");
 
-			TCLObject target = null;
+			TCLAtom target = null;
 			int pos = 0;
 
 			if (qname[0] == "")
@@ -485,17 +486,17 @@ namespace TCLSHARP
 			return target;
 		}
 
-		public TCLObject commandCall( string cmdname, TCLObject[] argv )
+		public TCLAtom commandCall( string cmdname, TCLAtom[] argv )
 		{
 			var func = ns[cmdname];
 
 			return func.Call(argv);
 		}
 
-		public TCLObject[] cmd_argv(TCLObject cmd, int v)
+		public TCLAtom[] cmd_argv(TCLAtom cmd, int v)
 		{
 			int nn = cmd.Count - v;
-			var _out = new TCLObject[nn];
+			var _out = new TCLAtom[nn];
 
 			for (int i = 0; i < nn; i++)
 			{
@@ -526,9 +527,9 @@ namespace TCLSHARP
 			return _out;
 		}
 
-		private TCLObject evalTclScript(List<TCLObject> list)
+		private TCLAtom evalTclScript(List<TCLAtom> list)
 		{
-			TCLObject res = null;
+			TCLAtom res = null;
 
 			foreach (var a in list)
 			{
@@ -538,7 +539,7 @@ namespace TCLSHARP
 			return res;
 		}
 
-		private TCLObject erro_print_r(TCLObject func, bool v)
+		private TCLAtom erro_print_r(TCLAtom func, bool v)
 		{
 			Console.WriteLine("error:" + func.ToString());
 

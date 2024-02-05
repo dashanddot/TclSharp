@@ -23,10 +23,10 @@ namespace TCLSHARP
 		
 	}
 
-	public class TCLObject
+	public class TCLAtom
 	{
-		public static TCLObject nil = new TCLObject(null);
-		public static TCLObject bool_true = new TCLObject(true);
+		public static TCLAtom nil = new TCLAtom(null);
+		public static TCLAtom bool_true = new TCLAtom(true);
 
 		public object oo;
 		public TCLKind kind;
@@ -47,26 +47,26 @@ namespace TCLSHARP
 				if (oo is Array)
 					return true;
 
-				if (oo is List<TCLObject>)
+				if (oo is List<TCLAtom>)
 					return true;
 
 				return false;
 			}
 		}
 
-		internal TCLObject[] Slice( int v, int nn = int.MaxValue)
+		internal TCLAtom[] Slice( int v, int nn = int.MaxValue)
 		{
 			var cmd = this;
 
-			if (oo is TCLObject[] && v == 0)
-				return oo as TCLObject[];
+			if (oo is TCLAtom[] && v == 0)
+				return oo as TCLAtom[];
 
 			if (v < 0)
 				return null;
 
 			int ann = Math.Min(nn, cmd.Count) - v;
 
-			var arr = new TCLObject[ann];
+			var arr = new TCLAtom[ann];
 
 			for (int i = 0; i < ann; i++)
 				arr[i] = cmd[v + i];
@@ -78,35 +78,35 @@ namespace TCLSHARP
 		{
 			get
 			{
-				if (oo is TCLObject[])
-					return ((TCLObject[])(oo)).Length;
+				if (oo is TCLAtom[])
+					return ((TCLAtom[])(oo)).Length;
 
-				if (oo is List<TCLObject>)
-					return ((List<TCLObject>)(oo)).Count;
+				if (oo is List<TCLAtom>)
+					return ((List<TCLAtom>)(oo)).Count;
 
 				return 1;
 			}
 		}
 
-		public TCLObject(object oo, TCLKind kind = TCLKind.Any)
+		public TCLAtom(object oo, TCLKind kind = TCLKind.Any)
 		{
 			this.oo = oo;
 			this.kind = kind;
 		}
 
-		public static implicit operator TCLObject(string value)
+		public static implicit operator TCLAtom(string value)
 		{
 			
 
-			return new TCLObject( value );
+			return new TCLAtom( value );
 		}
 
-		public static implicit operator string(TCLObject value)
+		public static implicit operator string(TCLAtom value)
 		{
 			return value.ToString();
 		}
 
-		public static implicit operator int(TCLObject value)
+		public static implicit operator int(TCLAtom value)
 		{
 			if (value.oo is int)
 				return (int)value.oo; 
@@ -117,7 +117,7 @@ namespace TCLSHARP
 			return int.Parse(value.ToString());
 		}
 
-		public static implicit operator bool(TCLObject value)
+		public static implicit operator bool(TCLAtom value)
 		{
 			if (value.oo is bool)
 				return ((bool)value.oo);
@@ -128,46 +128,46 @@ namespace TCLSHARP
 			return bool.Parse(value.ToString());
 		}
 
-		public static implicit operator TCLObject(TCLObject[] value)
+		public static implicit operator TCLAtom(TCLAtom[] value)
 		{
 
 
-			return new TCLObject(value);
+			return new TCLAtom(value);
 		}
 
-		public static implicit operator TCLObject( List<TCLObject> value)
+		public static implicit operator TCLAtom( List<TCLAtom> value)
 		{
 
 
-			return new TCLObject(value);
+			return new TCLAtom(value);
 		}
 
-		public static implicit operator TCLObject[](TCLObject value)
+		public static implicit operator TCLAtom[](TCLAtom value)
 		{
-			return value.oo as TCLObject[];
+			return value.oo as TCLAtom[];
 		}
 
 
 
-		public virtual TCLObject this[int index]
+		public virtual TCLAtom this[int index]
 		{
 			get
 			{
-				if (oo is List<TCLObject>)
+				if (oo is List<TCLAtom>)
 				{
-					return (oo as List<TCLObject>)[index];
+					return (oo as List<TCLAtom>)[index];
 				}
 
-				if (oo is TCLObject[])
+				if (oo is TCLAtom[])
 				{
-					return (oo as TCLObject[])[index];
+					return (oo as TCLAtom[])[index];
 				}
 
 				return null;
 			}
 		}
 
-		public virtual TCLObject this[string index]
+		public virtual TCLAtom this[string index]
 		{
 			get
 			{
@@ -180,22 +180,16 @@ namespace TCLSHARP
 			}
 		}
 
-		internal static TCLObject auto(object tok)
-		{
-			if (tok is TCLObject)
-				return tok as TCLObject;
 
-			return new TCLObject(tok);
-		}
 
 		public override string ToString()
 		{
 			return oo.ToString();
 		}
 
-		public TCLObject Call(TCLObject[] tCLObject)
+		public TCLAtom Call(TCLAtom[] tCLObject)
 		{
-			Func<TCLObject[], TCLObject> pfunc = oo as Func<TCLObject[], TCLObject>;
+			Func<TCLAtom[], TCLAtom> pfunc = oo as Func<TCLAtom[], TCLAtom>;
 
 			if(pfunc != null )
 				return pfunc(tCLObject);
@@ -203,11 +197,11 @@ namespace TCLSHARP
 			return null;
 		}
 
-		public virtual TCLObject Command(ITCLInterp i,TCLObject tCLObject)
+		public virtual TCLAtom Command(ITCLInterp i,TCLAtom tCLObject)
 		{
 			if (kind == TCLKind.cmd)
 			{
-				Func<TCLObject[], TCLObject> pfunc = oo as Func<TCLObject[], TCLObject>;
+				Func<TCLAtom[], TCLAtom> pfunc = oo as Func<TCLAtom[], TCLAtom>;
 
 				if (pfunc != null)
 					return pfunc( i.cmd_argv(tCLObject, 0) );
@@ -218,19 +212,27 @@ namespace TCLSHARP
 			return Call(argv);
 		}
 
-		public static TCLObject func(Func<TCLObject[], TCLObject> pfunc)
+		public static TCLAtom func(Func<TCLAtom[], TCLAtom> pfunc)
 		{
-			return new TCLObject(pfunc, TCLKind.func);
+			return new TCLAtom(pfunc, TCLKind.func);
 		}
-		public static TCLObject def_cmd(Func<TCLObject[], TCLObject> pfunc)
+		public static TCLAtom def_cmd(Func<TCLAtom[], TCLAtom> pfunc)
 		{
-			return new TCLObject(pfunc, TCLKind.cmd);
+			return new TCLAtom(pfunc, TCLKind.cmd);
+		}
+
+		internal static TCLAtom auto(object tok)
+		{
+			if (tok is TCLAtom)
+				return tok as TCLAtom;
+
+			return new TCLAtom(tok);
 		}
 	}
 
 	public interface ITCLInterp
 	{
-		TCLObject[] cmd_argv(TCLObject argv, int v);
+		TCLAtom[] cmd_argv(TCLAtom argv, int v);
 	}
 
 	class TCL
@@ -372,15 +374,15 @@ namespace TCLSHARP
 		return i;
 	}
 
-	public static List<TCLObject> parseTCL( string tcl, bool recurcive = false)
+	public static List<TCLAtom> parseTCL( string tcl, bool recurcive = false)
 	{
-		var dataArray = new List<TCLObject>();
+		var dataArray = new List<TCLAtom>();
 
 			string ss = tcl;
 
 		int sa = 0;
 
-		var line = new List<TCLObject>();
+		var line = new List<TCLAtom>();
 
 		int ssl = (ss).Length;
 
@@ -399,8 +401,8 @@ namespace TCLSHARP
 
 				if ((line).Count>0)
 				{
-						dataArray.Add((TCLObject)line);
-						line = new List<TCLObject>();
+						dataArray.Add((TCLAtom)line);
+						line = new List<TCLAtom>();
 					
 				}
 
@@ -451,7 +453,7 @@ namespace TCLSHARP
 				tok = ss.Substring( sa + 1, i - sa - 1);
 
 				if (starter == '"')
-						tok = new TCLObject(tok, TCLKind.evstring );//string ""
+						tok = new TCLAtom(tok, TCLKind.evstring );//string ""
 				else if(starter == '{')
 					tok = recurcive? TCL.parseTCL(tok.ToString()) : tok;
 
@@ -531,7 +533,7 @@ namespace TCLSHARP
 
 		finalTok:
 
-			line.Add( TCLObject.auto(tok) );
+			line.Add( TCLAtom.auto(tok) );
 		}
 
 		if ((line).Count > 0)

@@ -9,11 +9,11 @@ namespace TCLSHARP
     { 
     }
 
-    public class NetClass : TCLObject
+    public class NetClass : TCLAtom
     {
         protected Type _class;
 
-        public delegate TCLObject PerformCommand(TCLObject[] argv);
+        public delegate TCLAtom PerformCommand(TCLAtom[] argv);
 
         public NetClass(object oo) : base(oo, TCLKind.cmd)
         {
@@ -22,17 +22,17 @@ namespace TCLSHARP
             oo = (object)((PerformCommand)_DoCommand);
         }
 
-        public override TCLObject Command(ITCLInterp i, TCLObject tCLObject)
+        public override TCLAtom Command(ITCLInterp i, TCLAtom tCLObject)
         {
             return base.Command(i, tCLObject);
         }
 
-        protected TCLObject _DoCommand(TCLObject[] argv)
+        protected TCLAtom _DoCommand(TCLAtom[] argv)
         {
             return null;
         }
 
-        public override TCLObject this[string index] 
+        public override TCLAtom this[string index] 
         {
             get
             {
@@ -45,9 +45,9 @@ namespace TCLSHARP
                 if (ff is MethodInfo)
                 {
                     if( ff.GetCustomAttribute<TclRuntimeAttribute>() != null)
-                        return TCLObject.def_cmd( (argv) => { return TCLObject.auto((ff as MethodInfo).Invoke(null, new object[] { argv })); } );
+                        return TCLAtom.def_cmd( (argv) => { return TCLObject.auto((ff as MethodInfo).Invoke(null, new object[] { argv })); } );
                     else
-                        return TCLObject.func((argv) => { return TCLObject.auto((ff as MethodInfo).Invoke(null, new object[] { argv })); });
+                        return TCLAtom.func((argv) => { return TCLObject.auto((ff as MethodInfo).Invoke(null, new object[] { argv })); });
                 }
 
                 return base[index];
@@ -79,7 +79,7 @@ namespace TCLSHARP
         }
 
         [TclRuntimeAttribute]
-        public static TCLObject extern_define(TCLObject[] argv)
+        public static TCLAtom extern_define(TCLAtom[] argv)
         {
             var app = TCL.parseTCL(argv[1]);
             var interp = TCLInterp.runningNow;
@@ -107,11 +107,11 @@ namespace TCLSHARP
 
                     if (mm is System.Reflection.MethodInfo)
                     {
-                        interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto((mm as MethodInfo).Invoke(null, null)); });
+                        interp.ns["tclr::" + line[1]] = TCLAtom.func((argv) => { return TCLObject.auto((mm as MethodInfo).Invoke(null, null)); });
                     }
                     else
                     {
-                        interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
+                        interp.ns["tclr::" + line[1]] = TCLAtom.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
                     }
                 }
             }

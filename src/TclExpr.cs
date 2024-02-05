@@ -165,7 +165,7 @@ namespace TCLSHARP
 		public override object Do(TclExpr exp)
 		{
 			
-			return TCLInterp.runningNow.commandCall(tok, new TCLObject[] { TCLObject.auto( exp.doStack(v)) } );
+			return TCLInterp.runningNow.commandCall(tok, new TCLAtom[] { TCLObject.auto( exp.doStack(v)) } );
 		}
 	}
 
@@ -317,8 +317,8 @@ namespace TCLSHARP
 
 		private double operand_d(object v)
 		{
-			if (v is TCLObject)
-				return operand_d(((TCLObject)v).oo);
+			if (v is TCLAtom)
+				return operand_d(((TCLAtom)v).oo);
 
 			if (v is int)
 				return (int)v;
@@ -339,7 +339,7 @@ namespace TCLSHARP
 			return 0;
 		}
 
-		public TCLObject evalTCLexpr(string exprs, TCLInterp tCLInterp )
+		public TCLAtom evalTCLexpr(string exprs, TCLInterp tCLInterp )
 		{
 			this.tCLInterp = tCLInterp;
 
@@ -353,7 +353,7 @@ namespace TCLSHARP
 
 			var res = _doStack(_flow);
 
-			return new TCLObject(res);
+			return new TCLAtom(res);
 
 		}
 
