@@ -149,7 +149,7 @@ namespace TCLSHARP
 
 
 
-		public TCLObject this[int index]
+		public virtual TCLObject this[int index]
 		{
 			get
 			{
@@ -167,11 +167,16 @@ namespace TCLSHARP
 			}
 		}
 
-		public TCLObject this[string index]
+		public virtual TCLObject this[string index]
 		{
 			get
 			{
 				return null;
+			}
+
+			set
+			{
+				
 			}
 		}
 
@@ -198,7 +203,7 @@ namespace TCLSHARP
 			return null;
 		}
 
-		public TCLObject Command(ITCLInterp i,TCLObject tCLObject)
+		public virtual TCLObject Command(ITCLInterp i,TCLObject tCLObject)
 		{
 			if (kind == TCLKind.cmd)
 			{

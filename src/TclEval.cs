@@ -135,59 +135,6 @@ namespace TCLSHARP
 			return TCLObject.auto(System.Environment.TickCount);
 		}
 
-		static public Type lockupCLRType(string typeName)
-		{
-			var type = Type.GetType(typeName);
-			if (type != null) return type;
-			foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				type = a.GetType(typeName);
-				if (type != null)
-					return type;
-			}
-			return null;
-		}
-
-		public TCLObject clr_extern(TCLObject[] argv)
-		{
-			var app = TCL.parseTCL(argv[1]);
-			var interp = TCLInterp.runningNow;
-
-			foreach (var line in app)
-			{
-				if (!line.is_array)
-					break;
-
-				if (line[0] == "proc")
-				{
-					var fullname = line[1].ToString();
-
-					var qname = fullname.Split( "::" );
-
-					var typename = (string[])qname.Clone();
-					var methodName = qname[qname.Length - 1];
-
-					Array.Resize( ref typename, qname.Length - 1);
-
-
-					var tt = lockupCLRType( String.Join(".", typename ) );
-
-					var mm = tt.GetMember(methodName)[0];
-
-					if (mm is System.Reflection.MethodInfo)
-					{
-						interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto( (mm as MethodInfo).Invoke(null, null)); });
-					}
-					else
-					{
-						interp.ns["tclr::" + line[1]] = TCLObject.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
-					}
-				}
-			}
-
-			return null;
-		}
-
 		public TCLObject namespace_define(TCLObject[] argv)
 		{
 			return null;
@@ -327,7 +274,9 @@ namespace TCLSHARP
 
 		public TCLInterp( bool loadRuntime = false)
 		{
-			ns.Add("::tclr::extern", TCLObject.def_cmd(clr_extern));
+			ns.Add("tclr", new NetClass( typeof(TclNetRuntime) ) );
+
+			//ns.Add("::tclr::extern", TCLObject.def_cmd(clr_extern));
 
 			ns.Add("source", TCLObject.func(source_tcl)); 
 			ns.Add("namespace", TCLObject.def_cmd(namespace_define));
@@ -482,6 +431,14 @@ namespace TCLSHARP
 				if (cmdname[0] == '#')
 					return null;
 
+				if (cmdname.Contains("::"))
+				{
+					
+
+					return resolveQName(cmdname).Command(this,cmd);
+
+				}
+
 				if (ns.ContainsKey(cmdname))
 				{
 					//echo "call (func) ";
@@ -502,6 +459,30 @@ namespace TCLSHARP
 			}
 
 			return cmd;
+		}
+
+		private TCLObject resolveQName(string cmdname)
+		{
+			if (ns.ContainsKey(cmdname))
+				return ns[cmdname];
+
+			var qname = cmdname.Split("::");
+
+			TCLObject target = null;
+			int pos = 0;
+
+			if (qname[0] == "")
+			{
+				target = ns[qname[1]];//FIXME: root qname here
+				pos+=2;
+			}
+
+			while (pos < qname.Length)
+			{
+				target = target[qname[pos++]];
+			}
+
+			return target;
 		}
 
 		public TCLObject commandCall( string cmdname, TCLObject[] argv )
