@@ -184,6 +184,9 @@ namespace TCLSHARP
 
 		public override string ToString()
 		{
+			if (oo == null)
+				return "";
+
 			return oo.ToString();
 		}
 
@@ -235,7 +238,7 @@ namespace TCLSHARP
 		TCLAtom[] cmd_argv(TCLAtom argv, int v);
 	}
 
-	class TCL
+	public class TCL
 	{
 
 

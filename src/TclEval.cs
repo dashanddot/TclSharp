@@ -266,7 +266,10 @@ namespace TCLSHARP
 		}
 		public TCLAtom break_return(TCLAtom[] argv)
 		{
-			TCLInterp.runningNow.returnValue = argv[0];
+			if (argv.Length > 0)
+				TCLInterp.runningNow.returnValue = argv[0];
+			else
+				TCLInterp.runningNow.returnValue = TCLObject.nil;
 
 			return TCLInterp.runningNow.returnValue;
 		}
@@ -421,6 +424,8 @@ namespace TCLSHARP
 		public static TCLInterp runningNow = null;
 		public TCLAtom returnValue;
 
+		protected TCLAtom _unknown = null;
+
 		public TCLAtom evalTclLine(TCLAtom cmd)
 		{
 			runningNow = this;
@@ -455,6 +460,14 @@ namespace TCLSHARP
 				}
 				else
 				{
+					if (_unknown == null)
+						_unknown = ns.ContainsKey( "unknown" ) ?  ns[ "unknown" ] : null;
+
+					if (_unknown != null)
+					{
+						return _unknown.Command(this, cmd);
+					}
+
 					return erro_print_r(cmdname, true);
 				}
 			}

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
+using TCLSHARP;
 
-namespace TCLSHARP
+namespace TCLCC
 {
     class Program
     {
@@ -13,13 +14,13 @@ namespace TCLSHARP
                 file = args[0];
 
 
-        
+
 
             var interp = new TCLInterp(true);
 
             interp.Exec(file);
 
-          
+
 
 
         }
