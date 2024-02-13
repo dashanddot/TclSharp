@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TCLCC": {
+      "commandName": "Project",
+      "commandLineArgs": "-backend php game.tcl -- +fast"
+    }
+  }
+}

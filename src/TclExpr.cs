@@ -357,7 +357,25 @@ namespace TCLSHARP
 
 		}
 
-		public object _parseTCLexpr(   )
+		public List<object> parseTCLexpr(string exprs)
+		{
+			this.tCLInterp = tCLInterp;
+
+			_flow = new List<object>();
+
+
+			lexer = new TCLLexer(exprs);
+
+
+			_parseTCLexpr();
+
+			
+
+			return _flow;
+
+		}
+
+		public List<object> _parseTCLexpr(   )
 		{
 			var _opstack = new Stack<string>();
 
@@ -435,7 +453,7 @@ namespace TCLSHARP
 			}
 
 
-			return null;
+			return _flow;
         }
 
 		

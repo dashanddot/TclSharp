@@ -224,7 +224,7 @@ namespace TCLSHARP
 			return new TCLAtom(pfunc, TCLKind.cmd);
 		}
 
-		internal static TCLAtom auto(object tok)
+		public static TCLAtom auto(object tok)
 		{
 			if (tok is TCLAtom)
 				return tok as TCLAtom;

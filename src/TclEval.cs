@@ -115,20 +115,28 @@ namespace TCLSHARP
 		}
 		public TCLAtom proc_define(TCLAtom[] argv)
 		{
+
+
+			
+
+			return creteProcedure(argv[0], TCL.parseTCL(argv[1]), TCL.parseTCL(argv[2]));
+		}
+		public TCLAtom creteProcedure( string name, List<TCLAtom> args, List<TCLAtom> code )
+		{
 			var proc = new TCLProc();
 
-			var args = TCL.parseTCL(argv[1]);
+			
 
 			if (args.Count > 0)
 				proc.args = args[0].Slice(0);
 			else
 				proc.args = new TCLAtom[0];
 
-			proc.code = TCL.parseTCL(argv[2]);
+			proc.code = code;
 
-			ns[argv[0]] = TCLAtom.func(proc.DoCall);
+			ns[name] = TCLAtom.func(proc.DoCall);
 
-			return ns[argv[0]];
+			return ns[name];
 		}
 
 		TCLAtom _nproc(TCLAtom[] argv)
@@ -394,6 +402,8 @@ namespace TCLSHARP
 				}
 				else if (ss[i] == '[')
 				{
+					if (sul > 0)
+						_list.Add(ss.Substring(sua, sul));
 
 					var arr = new ReadVarResult();
 
@@ -403,7 +413,7 @@ namespace TCLSHARP
 
 					i = arr.pos+1;//skip ]
 					sua = i;
-					//sul = 1;//string length is 1 (+breakked of var)
+					sul = 0;//string length is 1 (+breakked of var)
 				}
 				else
 				{
@@ -412,7 +422,7 @@ namespace TCLSHARP
 
 			}
 
-			if (sul > 0)
+			if (sul > 0 && ss.Length > sua )
 				_list.Add( ss.Substring(sua, sul) );
 
 			if( _list.Count == 1 )
