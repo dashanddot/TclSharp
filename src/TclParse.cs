@@ -119,6 +119,9 @@ namespace TCLSHARP
 
 		public static implicit operator bool(TCLAtom value)
 		{
+			if (value == null)
+				return false;
+
 			if (value.oo is bool)
 				return ((bool)value.oo);
 
@@ -186,6 +189,19 @@ namespace TCLSHARP
 		{
 			if (oo == null)
 				return "";
+
+			if (oo is TCLAtom[])
+			{
+				var outs = "";
+				var oa = oo as TCLAtom[];
+
+				foreach (var ss in oa)
+				{
+					outs += ss.ToString();
+				}
+
+				return outs;
+			}
 
 			return oo.ToString();
 		}

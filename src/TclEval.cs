@@ -27,6 +27,15 @@ namespace TCLSHARP
 				interp.ns[this.args[i]] = argv[i];
 			}
 
+			if (this.args.Length < argv.Length && this.args[this.args.Length-1] == "args" )
+			{
+				var args_segment = new TCLAtom[argv.Length - (this.args.Length-1)];
+
+				Array.Copy(argv, this.args.Length-1, args_segment, 0, args_segment.Length);
+
+				interp.ns["args"] = TCLAtom.auto( args_segment );
+			}
+
 			foreach (var a in code)
 			{
 				if (interp.returnValue != null)
@@ -368,7 +377,24 @@ namespace TCLSHARP
 
 			for (int i = 0; i < ssl; i++)
 			{
-				// echo "tok ".ss[i];
+				if (sua == -1)
+					sua = i;
+
+				if (ss[i] == '/')
+				{
+					if (sul > 0)
+						_list.Add(ss.Substring(sua, sul));
+
+					i++;
+					_list.Add(ss.Substring(i, 1));
+					
+
+					sua = -1;
+					sul = 0;//string length is 1 (+breakked of var)
+
+					continue;
+				}
+					// echo "tok ".ss[i];
 				if (ss[i] == '$')
 				{
 					if(sul > 0)
@@ -396,8 +422,8 @@ namespace TCLSHARP
 						_list.Add( ns[arr.key] );
 
 					i = arr.pos;
-					sua = i;
-					sul = 1;//string length is 1 (+breakked of var)
+					sua = -1;
+					sul = 0;//string length is 1 (+breakked of var)
 
 				}
 				else if (ss[i] == '[')
@@ -411,9 +437,11 @@ namespace TCLSHARP
 
 					_list.Add(evalTclScript(TCL.parseTCL(arr.key, false)) );//TODO:recursive
 
-					i = arr.pos+1;//skip ]
-					sua = i;
+					i = arr.pos;//skip ]
+					sua = -1;
 					sul = 0;//string length is 1 (+breakked of var)
+
+					
 				}
 				else
 				{
