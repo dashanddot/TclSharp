@@ -89,6 +89,9 @@ namespace TCLCC
 
             foreach (var a in app)
             {
+                for (int i = 1; i <= _block; i++) 
+                    _writetext( " ");
+
                 evalTclLine(a, endline);
             }
 
@@ -179,11 +182,17 @@ namespace TCLCC
             return target;
         }
 
+        static int _block = 0;
         internal static TCLAtom codeblock(TCLAtom[] arg)
         {
+            _block++;
+
             starttext(null);
             ExecText(arg[1]);
             var _end = endtext(null);
+
+            _block--;
+
 
             _writetext(_end);
 
@@ -229,8 +238,19 @@ namespace TCLCC
             return prew;
         }
 
+        internal static TCLAtom depth(TCLAtom[] arg)
+        {
+            return TCLAtom.auto(_textstack.Count);
+        }
+
+        static bool _newline = false;
+
         internal static TCLAtom _writetext( string text )
         {
+            
+
+           
+
             if (_textbuf != null)
                 _textbuf += text;
             else 
@@ -243,6 +263,8 @@ namespace TCLCC
         {
             write(argv);
             _writetext("\n");
+
+           
 
             return null;
         }
@@ -316,6 +338,8 @@ namespace TCLCC
 
             return TCLAtom.auto( exprs );
         }
+
+
     }
 
     class Program
@@ -375,6 +399,7 @@ namespace TCLCC
 
             interp.ns["xtl::write"] = TCLObject.def_cmd(XTL.write);
             interp.ns["xtl::writeline"] = TCLObject.def_cmd(XTL.writeline);
+            interp.ns["xtl::depth"] = TCLObject.def_cmd(XTL.depth);
 
             interp.ns["xtl::args"] = TCLObject.def_cmd( (aa) => TCLObject.auto( "<args>" ) );
 

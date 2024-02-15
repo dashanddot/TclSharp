@@ -37,7 +37,7 @@ namespace TCLSHARP
 			_readyToken = _token;
 		}
 
-		static string pairable = "+-<>*!";
+		static string pairable = "+-<>*!=";
 
 		public bool getExpectedToken( string tok )
 		{
@@ -283,6 +283,14 @@ namespace TCLSHARP
 							b = operand_d(opstack.Pop());
 
 							opstack.Push(b-a);
+							break;
+						}
+					case "==":
+						{
+							a = operand_d(opstack.Pop());
+							b = operand_d(opstack.Pop());
+
+							opstack.Push(b == a);
 							break;
 						}
 					case "!=":

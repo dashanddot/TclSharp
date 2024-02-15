@@ -346,6 +346,9 @@ namespace TCLSHARP
 			if (list.oo is string)
 				return list.oo as string;
 
+			if (list.is_array && list.oo is TCLAtom[] )
+				return list.ToString();
+
 			foreach (var s in list.oo as List<TCLAtom>)
 				sout += s;
 
@@ -421,7 +424,7 @@ namespace TCLSHARP
 					else
 						_list.Add( ns[arr.key] );
 
-					i = arr.pos;
+					i = arr.pos-1;//readVariable return pos of break
 					sua = -1;
 					sul = 0;//string length is 1 (+breakked of var)
 
