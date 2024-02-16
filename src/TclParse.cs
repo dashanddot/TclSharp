@@ -190,6 +190,9 @@ namespace TCLSHARP
 			if (oo == null)
 				return "";
 
+			if (oo is bool)
+				return ((bool)oo) ? "1" : "0";
+
 			if (oo is TCLAtom[])
 			{
 				var outs = "";
@@ -251,7 +254,7 @@ namespace TCLSHARP
 
 	public interface ITCLInterp
 	{
-		TCLAtom[] cmd_argv(TCLAtom argv, int v);
+		TCLAtom[] cmd_argv(TCLAtom argv, int v, int maxnn = -1);
 	}
 
 	public class TCL
@@ -320,8 +323,9 @@ namespace TCLSHARP
 
 		int keya = i;
 		int keyb = -1;
+		int keyc = -1;
 
-		bool round = false;
+			bool round = false;
 		//only a-z 0-1 _ ()
 		for (; i < ssl; i++)
 		{
@@ -346,6 +350,9 @@ namespace TCLSHARP
 				else if(ssi == ')')
 				{
 					round = false;
+						keyc = i;
+
+
 					continue;
 				}
 				else if(ssi == '$')
@@ -365,10 +372,15 @@ namespace TCLSHARP
 		}
 
 		string has_inner = null;
-		if ( keyb == -1 )
-		    keyb = i;
-		else if ( return_array != null )
-			has_inner = ss.Substring(keyb + 1,i -keyb - 1);
+			if (keyb == -1)
+			{
+				keyb = i;
+			}
+			else if (return_array != null)
+			{
+				has_inner = ss.Substring(keyb + 1, keyc - keyb - 1);
+				
+			}
 
 		if ( return_array != null )
         {
@@ -498,7 +510,8 @@ namespace TCLSHARP
 					i = TCL.readVariable( ss, i, null );
 
 					//string token end - we merger all strings together
-					continue;
+					//FIXME: break?
+					break;
 				}
 
 				if (ssi == '[')

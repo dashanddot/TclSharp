@@ -1,6 +1,9 @@
 ﻿using System;
 using TCLSHARP;
 
+using MySql.Data.MySqlClient;
+
+
 namespace TCLSH
 {
     class Program
@@ -14,11 +17,29 @@ namespace TCLSH
 
             var interp = new TCLInterp(true);
 
+            interp.ns["mysql"] = new NetClass(typeof(MySqlConnection));
+            /*
+            var cc = new MySqlConnection();
+            var cmd = cc.CreateCommand();
+
+            cmd.CommandText = "SELECT * FROM men WHERE age = 22";
+            var reader = cmd.ExecuteReader();
+           
+            while (reader.Read())
+            {
+
+                // элементы массива [] - это значения столбцов из запроса SELECT
+                Console.WriteLine(reader[0].ToString() + " " + reader[1].ToString());
+            }
+            reader.Close(); // закрываем reader
+            */
             if (!string.IsNullOrEmpty(file))
             {
                 interp.Exec(file);
                 return;
             }
+
+          
 
             while (true)
             {

@@ -136,16 +136,19 @@ namespace TCLSHARP
 
 			
 
-			if (args.Count > 0)
+			if ( args != null && args.Count > 0)
 				proc.args = args[0].Slice(0);
 			else
 				proc.args = new TCLAtom[0];
 
 			proc.code = code;
 
-			ns[name] = TCLAtom.func(proc.DoCall);
+			var procObj = TCLAtom.func(proc.DoCall);
 
-			return ns[name];
+			if (name != null)
+				ns[name] = procObj;
+
+			return procObj;
 		}
 
 		TCLAtom _nproc(TCLAtom[] argv)
@@ -228,7 +231,11 @@ namespace TCLSHARP
 
 			while (true)
 			{
-				var flag = expr.evalTCLexpr(argv[0], interp);
+				var tcllines = TCL.parseTCL(argv[0]);
+
+				var finaltext = cmd_argv(TCLAtom.auto(tcllines[0]), 0);
+
+				var flag = expr.evalTCLexpr(finaltext[0], interp);
 
 				if (!(bool)flag)
 					break;
@@ -301,14 +308,6 @@ namespace TCLSHARP
 
 			ns.Add("source", TCLAtom.func(source_tcl)); 
 			ns.Add("namespace", TCLAtom.def_cmd(namespace_define));
-
-			ns.Add("puts", TCLAtom.func(debug_print));
-
-			//todo: move to implementation?
-			ns.Add("gets", TCLAtom.func( conio_gets ));
-			ns.Add("flush", TCLAtom.func(conio_flush));
-
-
 			ns.Add("proc", TCLAtom.func(proc_define));
 			ns.Add("set", TCLAtom.func(set_var));
 
@@ -316,16 +315,23 @@ namespace TCLSHARP
 			ns.Add("if", TCLAtom.def_cmd(cmd_if_define));
 
 			ns.Add("expr", TCLAtom.func(expr_do));
+			ns.Add("return", TCLAtom.func(break_return));
+
+			ns.Add("package", TCLAtom.func(Package.cmd_package));
+
+			//TODO: move to tclr
+			ns.Add("puts", TCLAtom.func(debug_print));
+
+			//todo: move to implementation?
+			ns.Add("gets", TCLAtom.func( conio_gets ));
+			ns.Add("flush", TCLAtom.func(conio_flush));
 
 			//TODO: to stdlib
 			ns.Add("clock", TCLAtom.func(clock_get));
 
-
+			//TODO: math?
 			ns.Add("rand", TCLAtom.func(math_rand));
 			ns.Add("round", TCLAtom.func(math_round));
-
-			ns.Add("return", TCLAtom.func(break_return));
-
 			ns.Add("incr", TCLAtom.def_cmd(  cmd_incr ));
 
 
@@ -414,7 +420,7 @@ namespace TCLSHARP
 
 					if (arr.val != null)
 					{
-						TCLAtom kvar = null;// GLOBALS[arr['key']];
+						TCLAtom kvar = ns[arr.key];
 						var key = stringTcl(arr.val);
 
 						//echo "kv 'var' 'key' ";
@@ -477,6 +483,19 @@ namespace TCLSHARP
 
 				if (cmdname[0] == '#')
 					return null;
+
+				if (cmdname.Contains("$") || cmdname[0] == '[')
+				{
+					var xargv = cmd_argv(cmd,0,1);
+
+					if (xargv[0] is TCLObject)
+					{
+						return xargv[0].Command(this, cmd);
+					}
+
+					cmdname = xargv[0];
+
+				}
 
 				if (cmdname.Contains("::"))
 				{
@@ -547,10 +566,13 @@ namespace TCLSHARP
 			return func.Call(argv);
 		}
 
-		public TCLAtom[] cmd_argv(TCLAtom cmd, int v)
+		public TCLAtom[] cmd_argv(TCLAtom cmd, int v, int maxnn = -1 )
 		{
 			int nn = cmd.Count - v;
 			var _out = new TCLAtom[nn];
+
+			if (maxnn != -1)
+				nn = Math.Min(nn, maxnn);
 
 			for (int i = 0; i < nn; i++)
 			{

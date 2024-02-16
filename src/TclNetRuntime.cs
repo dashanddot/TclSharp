@@ -9,6 +9,72 @@ namespace TCLSHARP
     { 
     }
 
+    public class NetObject : TCLObject
+    {
+        protected Type _class;
+
+        public NetObject(object self) : base(self)
+        {
+            _class = self.GetType();
+        }
+
+        public override TCLAtom Command(ITCLInterp i, TCLAtom tCLObject)
+        {
+            var argv = i.cmd_argv(tCLObject,1);
+
+            var ffs = _class.GetMember(argv[0]);
+
+            var ff = ffs[0];
+
+            if (ff is PropertyInfo)
+            {
+                (ff as PropertyInfo).SetValue(oo, argv[1].oo);
+            }
+
+            if (ff is MethodInfo)
+            {
+                var nobj = (ff as MethodInfo).Invoke( oo,  TclNetRuntime.toSimpleParamsArray(argv,1) );
+
+                if( nobj != null )
+                    return new NetObject(nobj);
+            }
+                
+
+            return null;
+        }
+
+        protected MethodInfo _getProp = null;
+
+        public override TCLAtom this[string index] 
+        {
+            get
+            {
+                if (_getProp == null)
+                {
+                    var all = _class.GetMethods();
+
+                    foreach (var mi in all)
+                    {
+                        var pps = mi.GetParameters();
+                        if ( pps != null & pps.Length > 0 && pps[0].ParameterType == typeof(string))
+                        {
+                            _getProp = mi;
+                            break;
+                        }
+                    }
+                }
+
+
+                return TCLAtom.auto(_getProp.Invoke(oo , new object[] { index  } ));
+            }
+
+            set
+            {
+                _class.GetMethod("get_Item").Invoke(oo, new object[] { value });
+            }
+        }
+    }
+
     public class NetClass : TCLAtom
     {
         protected Type _class;
@@ -24,7 +90,17 @@ namespace TCLSHARP
 
         public override TCLAtom Command(ITCLInterp i, TCLAtom tCLObject)
         {
-            return base.Command(i, tCLObject);
+            if (tCLObject[1] == "new")
+            {
+                var obj = Activator.CreateInstance(_class, TclNetRuntime.toSimpleParamsArray(i.cmd_argv(tCLObject, 2)));
+
+                return new NetObject(obj);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
         protected TCLAtom _DoCommand(TCLAtom[] argv)
@@ -114,9 +190,38 @@ namespace TCLSHARP
                         interp.ns["tclr::" + line[1]] = TCLAtom.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
                     }
                 }
+                else if (line[0] == "class")
+                {
+                    var fullname = line[1].ToString();
+
+                    var qname = fullname.Split("::");
+
+                    var typename = (string[])qname.Clone();
+                    
+
+                   
+
+
+                    var tt = lockupCLRType(String.Join(".", typename));
+
+                    interp.ns["tclr::" + line[1]] = new NetClass(tt );
+                }
             }
 
             return null;
+        }
+
+        internal static object[] toSimpleParamsArray(TCLAtom tCLObject, int from = 0 )
+        {
+            var aparams = new object[tCLObject.Count-from];
+
+
+            for (int i = from; i < aparams.Length; i++)
+            {
+                aparams[i] = tCLObject[from+i].oo;
+            }
+
+            return aparams;
         }
     }
 }
