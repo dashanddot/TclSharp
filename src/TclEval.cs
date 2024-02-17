@@ -590,7 +590,16 @@ namespace TCLSHARP
 					}
 
 					if (arg[0] == '$')
-						_out[i] = ns[arg.Substring(1)];
+					{
+						var varParse = new ReadVarResult();
+
+						TCL.readVariable(arg, 0,  varParse);
+
+						if(varParse.val!=null)
+							_out[i] = ns[varParse.key][varParse.val];
+						else
+							_out[i] = ns[varParse.key];
+					}
 					else if (arg[0] == '[')
 						_out[i] = evalTclOrString(cmd[from]);
 					else

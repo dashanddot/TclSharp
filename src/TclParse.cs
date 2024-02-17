@@ -174,6 +174,16 @@ namespace TCLSHARP
 		{
 			get
 			{
+				if (char.IsDigit(index[0]))
+				{
+					int int_index = 0;
+
+					if (int.TryParse(index, out int_index))
+					{
+						return this[int_index];
+					}
+				}
+
 				return null;
 			}
 
