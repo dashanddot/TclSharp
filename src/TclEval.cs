@@ -4,6 +4,29 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 
+#if NETSTANDARD
+
+public static class StringExtensions
+{
+    public static string[] Split(this string text, string seperator )
+    {
+        return text.Split( new string[] { seperator }, StringSplitOptions.None);
+    }
+
+	public static bool Contains(this string text,char sym)
+	{
+		for(int i=0;i<text.Length;i++)
+			if( text[i] == sym )
+				return true;
+
+		return false;
+	}
+
+ 
+}
+
+#endif
+
 namespace TCLSHARP
 {
 
@@ -334,8 +357,9 @@ namespace TCLSHARP
 			ns.Add("round", TCLAtom.func(math_round));
 			ns.Add("incr", TCLAtom.def_cmd(  cmd_incr ));
 
+			var eas = System.Reflection.Assembly.GetEntryAssembly();
 
-			var path = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+			var path = eas != null ? Path.GetDirectoryName(eas.Location) : "";
 
 			if (loadRuntime)
 				_execSource(this, path + Path.DirectorySeparatorChar + "tclr.tcl");
@@ -631,10 +655,19 @@ namespace TCLSHARP
 			return null;
 		}
 
-		public object Exec(string file)
+		public object ExecFile(string file)
 		{
 			var text = File.ReadAllText(file);
 
+			
+
+			return Exec(text);
+		}
+
+		public object Exec(string text)
+		{
+
+			TCLAtom last = null;
 			var app = TCL.parseTCL(text);
 
 			foreach (var a in app)
@@ -642,10 +675,13 @@ namespace TCLSHARP
 				if (returnValue != null)
 					break;
 
-				evalTclLine(a);
+				last = evalTclLine(a);
 			}
 
-			return returnValue;
+			if (returnValue != null)
+				return returnValue;
+
+			return last;
 		}
 	}
 }

@@ -183,11 +183,11 @@ namespace TCLSHARP
 
                     if (mm is System.Reflection.MethodInfo)
                     {
-                        interp.ns["tclr::" + line[1]] = TCLAtom.func((argv) => { return TCLObject.auto((mm as MethodInfo).Invoke(null, null)); });
+                        interp.ns["tclr::" + line[1]] = TCLAtom.func((proc_argv) => { return TCLObject.auto((mm as MethodInfo).Invoke(null, null)); });
                     }
                     else
                     {
-                        interp.ns["tclr::" + line[1]] = TCLAtom.func((argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
+                        interp.ns["tclr::" + line[1]] = TCLAtom.func((proc_argv) => { return TCLObject.auto((mm as PropertyInfo).GetValue(null)); });
                     }
                 }
                 else if (line[0] == "class")

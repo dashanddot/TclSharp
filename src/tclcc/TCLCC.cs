@@ -342,7 +342,7 @@ namespace TCLCC
 
     }
 
-    class TCLCC
+    class Program
     {
         static void Main(string[] args)
         {

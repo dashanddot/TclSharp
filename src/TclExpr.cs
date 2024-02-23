@@ -367,7 +367,7 @@ namespace TCLSHARP
 
 		public List<object> parseTCLexpr(string exprs)
 		{
-			this.tCLInterp = tCLInterp;
+			//this.tCLInterp = tCLInterp;
 
 			_flow = new List<object>();
 
